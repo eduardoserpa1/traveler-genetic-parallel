@@ -1,0 +1,49 @@
+Algoritmo genético para resolver o problema do caixeiro viajante.
+
+Problema: 
+Encontrar o menor caminho possível onde o caixeiro viajante visita UMA e unicamente UMA VEZ TODAS
+as cidades e ao fim retorna para a cidade inicial onde ele começou.
+
+Entrada:
+
+A entrada do algorimo é um arquivo .txt no seguinte formato:
+3           --> quantidade de pontos cartesianos.
+0.0 0.0     --> coordenadas x e y separadas por espaço.
+1.0 1.0
+2.0 2.0
+
+->> Solução
+
+Classes:
+
+Cidade(string nome, int x, int y)
+Rota(List<Cidade> ordem_de_cidades, double distancia)
+
+Lógica do algoritmo genético: Evoluir a partir de cruzamento e geração aleatoria de individuos (Rotas)
+
+Portanto, o individuo do algoritmo nesse caso é a classe Rota
+O objetivo é encontrar a melhor rota, na qual é a de menor distância
+
+----------------
+
+Usar o conceito de população e elite.
+
+> Sortear 1024 casos aleatorios, ou seja, 1000 rotas onde a ordem das cidades é aleatoria.
+CENTRO DE TREINAMENTO
+> Desses 1024 casos, selecionar os 100 melhores (A ELITE)
+> Dentro desses 128 melhores casos, iremos cruza-los entre eles
+> O cruzamento é feito da seguinte formato
+        pai             mae
+    [0,0,0,1,1,1] x [2,2,2,3,3,3]
+
+        filho1          filho2
+    [0,0,0,3,3,3]   [2,2,2,1,1,1]
+> Ao final, teremos 128 filhos da elite
+> Depois desse processo, montaremos uma nova população com a elite, os filhos da elite e mais o restante de 
+casos aleatorios
+e      fe  random
+128 + 128 + 768
+
+
+
+
