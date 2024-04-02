@@ -44,6 +44,19 @@ casos aleatorios
 e      fe  random
 128 + 128 + 768
 
+//
 
-
+> array ELITES
+-- SEMAFORO PARA IO DO ARRAY ELITE
+>variavel booleana 'using' para utilizar de semaforo (true = array travado, false = array liberado)
+>utilizar getter e setter que verifica o semaforo antes ser executado.
+>a thread que tentar acessar ou modificar o array tenta até conseguir, ou seja, até que using seja false
+-- METODO PARA ORDENAR O ARRAY ELITE EM MODO CRESCENTE DE ACORDO COM A DISTANCIA (RANKEAR O ARRAY DE ELITE)
+>método que também vai trancar o semaforo para ser executado, para que nenhuma thread tente modificar
+ou obter os valores enquanto o metodo ordena o array
+-- METODO PARA VERIFICAR SE O ARRAY OBTIDO POR UMA THREAD É MELHOR QUE O ARRAY ELITES
+>verifica primeiramente se a distancia total do array palpite é menor que a distancia total do array ELITE
+caso sim, o ranking contem melhores resultados e deve atualizar (set) o ranking compartilhado de elite
+caso não, deve verificar se o array elite contém melhores resultados, caso sim, atualiza (get) o proprio array (da thread que estiver executando
+esse metodo) para o array elite.
 
