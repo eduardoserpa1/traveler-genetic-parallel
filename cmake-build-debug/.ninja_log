@@ -1,0 +1,17 @@
+# ninja log v5
+15	1204	7338053054891147	build.ninja	98c1a908e21bfa7c
+5	623	7338053054891147	build.ninja	98c1a908e21bfa7c
+1	1617	7338053481306709	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+8	2263	7338053559686126	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+14	1277	7338059538831228	CMakeFiles/traveler_genetic_parallel.dir/City.cpp.obj	5b2dd8ca00f883ff
+34	1429	7338059540341459	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+9	1281	7338060452177632	CMakeFiles/traveler_genetic_parallel.dir/Route.cpp.obj	581459194dfe211f
+1284	1951	7338060458905621	traveler_genetic_parallel.exe	76daba6dc6032a2f
+9	1181	7338061348945854	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+1182	1475	7338061351730731	traveler_genetic_parallel.exe	76daba6dc6032a2f
+11	1749	7338084278599036	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+1750	2151	7338084282564831	traveler_genetic_parallel.exe	76daba6dc6032a2f
+8	1482	7338084480911684	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+1483	1833	7338084484329466	traveler_genetic_parallel.exe	76daba6dc6032a2f
+7	1336	7338084686564891	CMakeFiles/traveler_genetic_parallel.dir/Main.cpp.obj	94839a197289f0c2
+1340	1665	7338084689771757	traveler_genetic_parallel.exe	76daba6dc6032a2f

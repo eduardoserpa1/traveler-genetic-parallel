@@ -6,34 +6,27 @@
 
 using namespace std;
 
-class Route {
+Route::Route(vector<City> cities) {
+  this->cities = cities;
+  distance = getDistance();
+}
 
-  vector<City> cities;
-  double distance;
+vector<City> Route::getCities() {
+  return cities;
+}
 
-  public:
-    Route(vector<City> cities) {
-      this->cities = cities;
-      distance = getDistance();
-    }
+double Route::getDistance() {
+  double total = 0;
+  for (int i = 0; i < cities.size(); i++) {
+    City from = cities[i];
+    City to = cities[(i + 1) % cities.size()];
+    total += sqrt(pow(to.getX() - from.getX(), 2) + pow(to.getY() - from.getY(), 2));
+    distance = total;
+  }
 
-    vector<City> getCities() {
-      return cities;
-    }
+  return distance;
+}
 
-    double getDistance() {
-      double total = 0;
-      for (int i = 0; i < cities.size(); i++) {
-        City from = cities[i];
-        City to = cities[(i + 1) % cities.size()];
-        total += sqrt(pow(to.getX() - from.getX(), 2) + pow(to.getY() - from.getY(), 2));
-        distance = total;
-      }
-
-      return distance;
-    }
-
-    void print() {
-      cout << "Route: " << &cities << ":" << distance << endl;
-    }
-};
+void Route::print() {
+  cout << "Route: " << &cities << ":" << distance << endl;
+}

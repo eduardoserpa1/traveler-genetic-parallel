@@ -1,21 +1,68 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <vector>
 #include "City.h"
 #include "Route.h"
 
 using namespace std;
 
+//GLOBAL
+vector<City> cityData;
+const string filename = "estados-30.csv";
+
+//DECLARATIONS
+void setup();
+void loadCityData();
+void createFirstElite();
+
+//IMPLEMENTATION
+void setup(){
+    loadCityData();
+    createFirstElite();
+}
+
+void loadCityData(){
+    vector<string> linhas;
+    ifstream arquivo(filename);
+
+    if (!arquivo.is_open()) {
+        cerr << "Erro ao abrir o arquivo " << filename << endl;
+        return;
+    }
+
+    string linha;
+    while (getline(arquivo, linha)) {
+        linhas.push_back(linha);
+    }
+
+    arquivo.close();
+
+    int index = 0;
+
+    for (const auto& linha : linhas) {
+        istringstream iss(linha);
+        string name, x, y;
+
+        getline(iss, name, ',');
+        getline(iss, x, ',');
+        getline(iss, y, ',');
+
+        City city = City(name, stoi(x), stoi(y));
+        cityData.push_back(city);
+        index++;
+    }
+}
+
+void createFirstElite(){
+
+}
+
 int main() {
-  vector<City> cities = {
-    City("A", 0, 0),
-    City("B", 1, 0),
-    City("C", 1, 1),
-    City("D", 0, 1)
-  };
+    setup();
+    Route route(cityData);
 
-  Route route(cities);
+    route.print();
 
-  route.print();
-
-  return 0;
+    return 0;
 };

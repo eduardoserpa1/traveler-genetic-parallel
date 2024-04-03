@@ -1,35 +1,28 @@
 #include <iostream>
 #include <string>
+#include <utility>
 #include "City.h"
 
 using namespace std;
 
-class City {
+City::City(string name, int x, int y) {
+    this->name = std::move(name);
+    this->x = x;
+    this->y = y;
+}
 
-  string name;
-  int x;
-  int y;
+string City::getName() {
+  return name;
+}
 
-  public:
-    City(string name, int x, int y) {
-      this->name = name;
-      this->x = x;
-      this->y = y;
-    }
+int City::getX() const {
+    return x;
+}
 
-    string getName() {
-      return name;
-    }
+int City::getY() const {
+  return y;
+}
 
-    int getX() {
-      return x;
-    }
-
-    int getY() {
-      return y;
-    }
-
-    void print() {
-      cout << name << " (" << x << ", " << y << ")" << endl;
-    }
-};
+void City::print() {
+  cout << name << " (" << x << ", " << y << ")" << endl;
+}
