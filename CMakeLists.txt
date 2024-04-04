@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(.)
 
 add_executable(traveler_genetic_parallel
-        City.cpp
-        City.h
-        Main.cpp
-        Route.cpp
-        Route.h)
+        ./src/City.cpp
+        ./src/City.h
+        ./src/Main.cpp
+        ./src/Route.cpp
+        ./src/Route.h)
