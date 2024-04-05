@@ -12,11 +12,10 @@ using namespace std;
 //GLOBAL
 vector<City> cityData;
 const string filename = "../database/estados-30.csv";
-int ERA_LIMIT = 10;
-int FIRST_POPULATION_LENGTH = 1024;
+int ERA_LIMIT = 1000;
+int FIRST_POPULATION_LENGTH = 1024 * 4;
 int POPULATION_DIVISOR = 8;
 vector<Route> firstPopulation;
-vector<Route> firstPopulation2;
 vector<Route> elite;
 
 //DECLARATIONS
@@ -75,6 +74,7 @@ Route createRandomRoute(){
 
     for (int i = 0; i < cityData.size(); ++i) {
         int index = rand() % cityData.size();
+        //Condição do while não está verificando e gerando individuos com cidades duplicadas
         while( find(randomVector.begin(), randomVector.end(), index) != randomVector.end() ){
             index = rand() % cityData.size();
         }
@@ -102,7 +102,6 @@ void sortVectorByDistance(vector<Route> *v){
 void generateFirstPopulation(){
     for (int i = 0; i < FIRST_POPULATION_LENGTH; ++i) {
         firstPopulation.push_back(createRandomRoute());
-        firstPopulation2.push_back(createRandomRoute());
     }
 }
 
@@ -125,18 +124,23 @@ void train(){
     while(running) {
         vector<Route> childs;
 
+        cout << "Melhor rota da era " << currentEra << ": distancia = " << currentElite[0].getDistance() << endl;
+        for(City c : currentElite[0].getCities()){
+            c.print();
+        }
+
         generateChilds(currentElite,&childs);
 
         for (int i = 0; i < currentElite.size(); ++i) {
             currentPopulation.push_back(currentElite[i]);
-            currentPopulation.push_back(childs[i]);
+            currentPopulation.push_back(childs.at(i));
         }
 
         sortVectorByDistance(&currentPopulation);
 
         currentElite.clear();
 
-        for (int i = 0; i < currentElite.size(); ++i) {
+        for (int i = 0; i < FIRST_POPULATION_LENGTH / POPULATION_DIVISOR; ++i) {
             currentElite.push_back(currentPopulation[i]);
         }
 
@@ -145,8 +149,6 @@ void train(){
         for (int i = 0; i < divisor; ++i) {
             currentPopulation.push_back(createRandomRoute());
         }
-
-        cout << "Melhor rota da era " << currentEra << currentElite[0].getDistance() << endl;
 
         if(currentEra >= ERA_LIMIT)
             running = false;
@@ -176,8 +178,10 @@ void generateChilds(vector<Route> elite, vector<Route> *childs){
             child2.push_back(fatherDNA[j]);
             child2.push_back(motherDNA[j + half]);
         }
-    }
 
+        childs->push_back(Route(child1));
+        childs->push_back(Route(child2));
+    }
 }
 
 int main() {

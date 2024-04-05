@@ -24,5 +24,5 @@ int City::getY() const {
 }
 
 void City::print() {
-  cout << name << " (" << x << ", " << y << ")" << endl;
+  cout << name << " (" << x << ", " << y << ") ";
 }
