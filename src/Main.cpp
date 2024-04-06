@@ -12,9 +12,11 @@ using namespace std;
 //GLOBAL
 vector<City> cityData;
 const string filename = "../database/estados-30.csv";
-int ERA_LIMIT = 1000;
-int FIRST_POPULATION_LENGTH = 1024 * 4;
-int POPULATION_DIVISOR = 8;
+int ERA_LIMIT = 10000;
+int FIRST_POPULATION_LENGTH = 1024;
+int POPULATION_DIVISOR = 16;
+int MUTATION_FACTOR = 4;
+int MUTATION_CHANCE = 80;
 vector<Route> firstPopulation;
 vector<Route> elite;
 
@@ -26,8 +28,9 @@ void createFirstElite();
 void sortVectorByDistance(vector<Route> *v);
 void generateFirstPopulation();
 void train();
-void generateChilds(vector<Route> elite, vector<Route> *childs);
+void generateChilds(vector<Route> elite, vector<Route> avaibleForElite, vector<Route> *childs);
 bool containsCity(vector<City> v, City c);
+void makeMutation(Route *r);
 
 //IMPLEMENTATION
 void setup(){
@@ -95,8 +98,8 @@ Route createRandomRoute(){
 }
 
 void createFirstElite(){
-    int quarter = FIRST_POPULATION_LENGTH / POPULATION_DIVISOR;
-    for (int i = 0; i < quarter; ++i) {
+    int divisor = FIRST_POPULATION_LENGTH / POPULATION_DIVISOR;
+    for (int i = 0; i < divisor; ++i) {
         elite.push_back(firstPopulation[i]);
     }
 }
@@ -128,14 +131,23 @@ void train(){
 
 
     while(running) {
+        //cout << currentPopulation.size() << endl;
         vector<Route> childs;
+        vector<Route> avaibleForElite;
 
-        cout << "Melhor rota da era " << currentEra << ": distancia = " << currentElite[0].getDistance() << endl;
-        for(City c : currentElite[0].getCities()){
-            c.print();
+        if(currentEra % 50 == 0){
+            cout << "Melhor rota da era " << currentEra << ": distancia = " << currentElite[0].getDistance() << endl;
+//            for(City c : currentElite[0].getCities()){
+//                c.print();
+//            }
+            cout << endl << "-----------------------------------" << endl;
         }
 
-        generateChilds(currentElite,&childs);
+        for(int i = 0; i < FIRST_POPULATION_LENGTH / POPULATION_DIVISOR; i++){
+            avaibleForElite.push_back(createRandomRoute());
+        }
+
+        generateChilds(currentElite,avaibleForElite,&childs);
 
         for (int i = 0; i < currentElite.size(); ++i) {
             currentPopulation.push_back(currentElite[i]);
@@ -146,7 +158,7 @@ void train(){
 
         currentElite.clear();
 
-        for (int i = 0; i < FIRST_POPULATION_LENGTH / POPULATION_DIVISOR; ++i) {
+        for (int i = 0; i < (FIRST_POPULATION_LENGTH / POPULATION_DIVISOR) / 2; ++i) {
             currentElite.push_back(currentPopulation[i]);
         }
 
@@ -168,10 +180,10 @@ void train(){
     }
 }
 
-void generateChilds(vector<Route> elite, vector<Route> *childs){
-    for (int i = 0; i < elite.size() / 2; ++i) {
+void generateChilds(vector<Route> elite, vector<Route> avaibleForElite, vector<Route> *childs){
+    for (int i = 0; i < elite.size(); ++i) {
         vector<City> fatherDNA = elite[i].getCities();
-        vector<City> motherDNA = elite[i+1].getCities();
+        vector<City> motherDNA = avaibleForElite[i].getCities();
 
         vector<City> child1;
         vector<City> child2;
@@ -186,17 +198,51 @@ void generateChilds(vector<Route> elite, vector<Route> *childs){
         }
 
 
-        
+        int indexCrossover = half;
         for (int j = half; j < motherDNA.size(); ++j) {
+
             if(!containsCity(child1,fatherDNA[j])){
                 child1.push_back(fatherDNA[j]);
             }else{
-                //
+                while(containsCity(child1,motherDNA[indexCrossover])){
+                    indexCrossover++;
+                }
+                child1.push_back(motherDNA[indexCrossover]);
             }
         }
 
-        childs->push_back(Route(child1));
-        childs->push_back(Route(child2));
+        indexCrossover = half;
+        for (int j = half; j < fatherDNA.size(); ++j) {
+
+            if(!containsCity(child2,motherDNA[j])){
+                child2.push_back(motherDNA[j]);
+            }else{
+                while(containsCity(child2,fatherDNA[indexCrossover])){
+                    indexCrossover++;
+                }
+                child2.push_back(fatherDNA[indexCrossover]);
+            }
+        }
+        Route route1 = Route(child1);
+        Route route2 = Route(child2);
+
+        if((rand() % 100) < MUTATION_CHANCE){
+            makeMutation(&route1);
+            makeMutation(&route2);
+        }
+
+        childs->push_back(route1);
+        childs->push_back(route2);
+    }
+}
+
+void makeMutation(Route *r){
+    for (int i = 0; i < MUTATION_FACTOR; ++i) {
+        int indexA = rand() % cityData.size();
+        int indexB = rand() % cityData.size();
+        City aux = r->getCities().at(indexA);
+        r->getCities().at(indexA) = r->getCities().at(indexB);
+        r->getCities().at(indexB) = aux;
     }
 }
 
@@ -212,7 +258,39 @@ int main() {
 
     train();
 
-    createRandomRoute();
+
+    City c1 = City("A",0,0);
+    City c2 = City("B",0,0);
+    City c3 = City("C",0,0);
+    City c4 = City("D",0,0);
+
+    vector<City> fatherDNA;
+    fatherDNA.push_back(c1);
+    fatherDNA.push_back(c2);
+    fatherDNA.push_back(c3);
+    fatherDNA.push_back(c4);
+
+    Route fatherTest = Route(fatherDNA);
+
+    vector<City> motherDNA;
+    motherDNA.push_back(c4);
+    motherDNA.push_back(c3);
+    motherDNA.push_back(c2);
+    motherDNA.push_back(c1);
+
+    Route motherTest = Route(motherDNA);
+
+    vector<Route> eliteTest;
+    eliteTest.push_back(fatherTest);
+    eliteTest.push_back(motherTest);
+
+    vector<Route> childs;
+
+    //generateChilds(eliteTest,&childs);
+
+    for(Route r : childs){
+        r.print();
+    }
 
 
     return 0;
