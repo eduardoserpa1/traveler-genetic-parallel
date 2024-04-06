@@ -3,6 +3,8 @@ project(traveler_genetic_parallel)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS -Wall)
+set(CMAKE_CXX_FLAGS -fopenmp)
+
 
 include_directories(.)
 
