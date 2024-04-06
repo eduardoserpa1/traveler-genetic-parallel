@@ -22,7 +22,13 @@ int City::getX() const {
 int City::getY() const {
   return y;
 }
-
+// (" << x << ", " << y << ")
 void City::print() {
-  cout << name << " (" << x << ", " << y << ") ";
+  cout << name << ", ";
+}
+
+bool City::equals(City c) {
+    if( this->getName() == c.getName() && this->getX() == c.getX() && this->getY() == c.getY())
+        return true;
+    return false;
 }

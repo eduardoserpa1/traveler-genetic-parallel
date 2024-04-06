@@ -15,6 +15,7 @@ class City {
     int getX() const;
     int getY() const;
     void print();
+    bool equals(City c);
 };
 
 #endif

@@ -27,6 +27,7 @@ void sortVectorByDistance(vector<Route> *v);
 void generateFirstPopulation();
 void train();
 void generateChilds(vector<Route> elite, vector<Route> *childs);
+bool containsCity(vector<City> v, City c);
 
 //IMPLEMENTATION
 void setup(){
@@ -74,7 +75,6 @@ Route createRandomRoute(){
 
     for (int i = 0; i < cityData.size(); ++i) {
         int index = rand() % cityData.size();
-        //Condição do while não está verificando e gerando individuos com cidades duplicadas
         while( find(randomVector.begin(), randomVector.end(), index) != randomVector.end() ){
             index = rand() % cityData.size();
         }
@@ -84,6 +84,12 @@ Route createRandomRoute(){
     for (int i = 0; i < cityData.size(); ++i) {
         finalVector.push_back(cityData[randomVector[i]]);
     }
+
+//    cout << "[";
+//    for(int i:randomVector){
+//        cout << i << ", ";
+//    }
+//    cout << "]";
 
     return Route(finalVector);
 }
@@ -174,9 +180,19 @@ void generateChilds(vector<Route> elite, vector<Route> *childs){
 
         for (int j = 0; j < half; ++j) {
             child1.push_back(motherDNA[j]);
-            child1.push_back(fatherDNA[j + half]);
+            //child1.push_back(fatherDNA[j + half]);
             child2.push_back(fatherDNA[j]);
-            child2.push_back(motherDNA[j + half]);
+            //child2.push_back(motherDNA[j + half]);
+        }
+
+
+        
+        for (int j = half; j < motherDNA.size(); ++j) {
+            if(!containsCity(child1,fatherDNA[j])){
+                child1.push_back(fatherDNA[j]);
+            }else{
+                //
+            }
         }
 
         childs->push_back(Route(child1));
@@ -184,10 +200,20 @@ void generateChilds(vector<Route> elite, vector<Route> *childs){
     }
 }
 
+bool containsCity(vector<City> v, City c){
+    for(City city : v)
+        if(city.equals(c))
+            return true;
+    return false;
+}
+
 int main() {
     setup();
 
     train();
+
+    createRandomRoute();
+
 
     return 0;
 };
