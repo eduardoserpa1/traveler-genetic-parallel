@@ -12,13 +12,16 @@ using namespace std;
 //GLOBAL
 vector<City> cityData;
 const string filename = "../database/estados-30.csv";
-int ERA_LIMIT = 1000;
-double TARGET_DISTANCE = 220;
+
+double TARGET_DISTANCE = 200;
+int COMUNICATION_INTERVAL = 5;
 int FIRST_POPULATION_LENGTH = 1024;
-int POPULATION_DIVISOR = 8;
+int POPULATION_DIVISOR = 16;
 int MUTATION_FACTOR = 1;
 int MUTATION_CHANCE = 50;
-int NUM_THREADS = 8;
+int NUM_THREADS = 2;
+int ERA_LIMIT = 1000;
+
 vector<Route> firstPopulation;
 vector<Route> elite;
 double eliteSumDistance = 0;
@@ -145,7 +148,7 @@ void train(){
     int currentEra = 0;
     vector<Route> currentPopulation;
     vector<Route> currentElite;
-    int divisor = FIRST_POPULATION_LENGTH - (FIRST_POPULATION_LENGTH / (POPULATION_DIVISOR / 2));
+    int divisor = FIRST_POPULATION_LENGTH - (FIRST_POPULATION_LENGTH / (POPULATION_DIVISOR / 4));
 
     for (Route r:elite) {
         currentElite.push_back(r);
@@ -157,38 +160,34 @@ void train(){
 
 
     while(running) {
-        //cout << currentPopulation.size() << endl;
         vector<Route> childs;
         vector<Route> avaibleForElite;
 
-        if(currentEra % 20 == 0 && currentEra != 0){
+        if(currentEra % COMUNICATION_INTERVAL == 0 && currentEra != 0){
             //cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << endl;
 //            for(City c : currentElite[0].getCities()){
 //                c.print();
 //            }
-            cout << "thread " << omp_get_thread_num() << " ve melhor caso compartilhado: " << elite[0].getDistance() << endl << endl;
+            //cout << "thread " << omp_get_thread_num() << " ve melhor caso compartilhado: " << elite[0].getDistance() << endl << endl;
             vector<Route> newElite;
 
             for (int i = 0; i < currentElite.size(); ++i) {
-                newElite.push_back(currentElite[i]);
-                newElite.push_back(elite[i]);
+                if(currentElite[i].getDistance() > elite[i].getDistance())
+                    newElite.push_back(elite[i]);
+                else
+                    newElite.push_back(currentElite[i]);
             }
 
             sortVectorByDistance(&newElite);
 
             updateEliteSumDistance();
-            //verifica se distancia total da current elite é maior que elite global
+
             if(isBetterElite(currentElite)){
-                // se sim, organiza um vetor com as 2 elites somadas e pega metade dele para ser a nova current elite
-                // soma e da sort
-                // escreve
                 elite.clear();
-                for (int i = 0; i < newElite.size()/2; ++i) {
+                for (int i = 0; i < newElite.size(); ++i) {
                     elite.push_back(newElite[i]);
                 }
             }else{
-                // se não, organiza um vetor com as 2 elites somadas e pega metade dele para ser a nova elite global
-                //soma e da sort
                 currentElite = elite;
             }
         }
@@ -197,10 +196,16 @@ void train(){
             avaibleForElite.push_back(createRandomRoute());
         }
 
+        //cout << currentElite.size() << endl;
+        //cout << avaibleForElite.size() << endl;
+
         generateChilds(currentElite,avaibleForElite,&childs);
 
         for (int i = 0; i < currentElite.size(); ++i) {
             currentPopulation.push_back(currentElite[i]);
+        }
+
+        for (int i = 0; i < childs.size(); ++i) {
             currentPopulation.push_back(childs.at(i));
         }
 
@@ -208,9 +213,11 @@ void train(){
 
         currentElite.clear();
 
-        for (int i = 0; i < (FIRST_POPULATION_LENGTH / POPULATION_DIVISOR) / 2; ++i) {
+        for (int i = 0; i < (FIRST_POPULATION_LENGTH / POPULATION_DIVISOR); ++i) {
             currentElite.push_back(currentPopulation[i]);
         }
+
+        //cout << currentPopulation.size() << endl;
 
         currentPopulation.clear();
 
@@ -225,10 +232,6 @@ void train(){
         currentEra++;
     }
 
-    elite.clear();
-    for(Route r: currentElite){
-        elite.push_back(r);
-    }
 }
 
 void generateChilds(vector<Route> elite, vector<Route> avaibleForElite, vector<Route> *childs){
@@ -236,16 +239,15 @@ void generateChilds(vector<Route> elite, vector<Route> avaibleForElite, vector<R
         vector<City> fatherDNA = elite[i].getCities();
         vector<City> motherDNA = avaibleForElite[i].getCities();
 
-        vector<City> child1;
-        vector<City> child2;
+        vector<City> child1,child2,child3,child4;
 
         int half = motherDNA.size() / 2;
 
         for (int j = 0; j < half; ++j) {
             child1.push_back(motherDNA[j]);
-            //child1.push_back(fatherDNA[j + half]);
             child2.push_back(fatherDNA[j]);
-            //child2.push_back(motherDNA[j + half]);
+            child3.push_back(fatherDNA[half + j]);
+            child4.push_back(motherDNA[half + j]);
         }
 
 
@@ -274,26 +276,59 @@ void generateChilds(vector<Route> elite, vector<Route> avaibleForElite, vector<R
                 child2.push_back(fatherDNA[indexCrossover]);
             }
         }
+
+        indexCrossover = 0;
+        for (int j = half; j < fatherDNA.size(); ++j) {
+
+            if(!containsCity(child3,motherDNA[j - half])){
+                child3.push_back(motherDNA[j - half]);
+            }else{
+                while(containsCity(child3,fatherDNA[indexCrossover])){
+                    indexCrossover++;
+                }
+                child3.push_back(fatherDNA[indexCrossover]);
+            }
+        }
+
+        indexCrossover = 0;
+        for (int j = half; j < motherDNA.size(); ++j) {
+
+            if(!containsCity(child4,fatherDNA[j - half])){
+                child4.push_back(fatherDNA[j - half]);
+            }else{
+                while(containsCity(child4,motherDNA[indexCrossover])){
+                    indexCrossover++;
+                }
+                child4.push_back(motherDNA[indexCrossover]);
+            }
+        }
+
         Route route1 = Route(child1);
         Route route2 = Route(child2);
+        Route route3 = Route(child3);
+        Route route4 = Route(child4);
 
-        if((rand() % 100) < MUTATION_CHANCE){
-            makeMutation(&route1);
-            makeMutation(&route2);
-        }
+        makeMutation(&route1);
+        makeMutation(&route2);
+        makeMutation(&route3);
+        makeMutation(&route4);
 
         childs->push_back(route1);
         childs->push_back(route2);
+        childs->push_back(route3);
+        childs->push_back(route4);
     }
 }
 
 void makeMutation(Route *r){
-    for (int i = 0; i < MUTATION_FACTOR; ++i) {
-        int indexA = rand() % cityData.size();
-        int indexB = rand() % cityData.size();
-        City aux = r->getCities().at(indexA);
-        r->getCities().at(indexA) = r->getCities().at(indexB);
-        r->getCities().at(indexB) = aux;
+    if((rand() % 100) < MUTATION_CHANCE) {
+        for (int i = 0; i < MUTATION_FACTOR; ++i) {
+            int indexA = rand() % cityData.size();
+            int indexB = rand() % cityData.size();
+            City aux = r->getCities().at(indexA);
+            r->getCities().at(indexA) = r->getCities().at(indexB);
+            r->getCities().at(indexB) = aux;
+        }
     }
 }
 
@@ -306,13 +341,14 @@ bool containsCity(vector<City> v, City c){
 
 int main() {
     setup();
+
     omp_set_num_threads(NUM_THREADS);
 
-    int i = 0;
+    int i;
 
     double starttime = omp_get_wtime();
 
-#pragma omp parallel private ( i ) shared ( elite )
+#pragma omp parallel private ( i ) shared ( elite, eliteSumDistance )
 #pragma omp for schedule (dynamic)
     for (i = 0; i < NUM_THREADS; ++i){
 
@@ -322,40 +358,6 @@ int main() {
     double finaltime = omp_get_wtime();
 
     cout << "tempo demorado para atingir a rota minima de " << TARGET_DISTANCE << ": " << finaltime - starttime << "ms" << endl;
-
-
-//    City c1 = City("A",0,0);
-//    City c2 = City("B",0,0);
-//    City c3 = City("C",0,0);
-//    City c4 = City("D",0,0);
-//
-//    vector<City> fatherDNA;
-//    fatherDNA.push_back(c1);
-//    fatherDNA.push_back(c2);
-//    fatherDNA.push_back(c3);
-//    fatherDNA.push_back(c4);
-//
-//    Route fatherTest = Route(fatherDNA);
-//
-//    vector<City> motherDNA;
-//    motherDNA.push_back(c4);
-//    motherDNA.push_back(c3);
-//    motherDNA.push_back(c2);
-//    motherDNA.push_back(c1);
-//
-//    Route motherTest = Route(motherDNA);
-//
-//    vector<Route> eliteTest;
-//    eliteTest.push_back(fatherTest);
-//    eliteTest.push_back(motherTest);
-//
-//    vector<Route> childs;
-//
-//    //generateChilds(eliteTest,&childs);
-//
-//    for(Route r : childs){
-//        r.print();
-//    }
 
 
     return 0;
