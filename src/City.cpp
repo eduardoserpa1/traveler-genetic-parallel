@@ -24,7 +24,7 @@ int City::getY() const {
 }
 // (" << x << ", " << y << ")
 void City::print() {
-  cout << name << ", ";
+  cout << name << " -> ";
 }
 
 bool City::equals(City c) {

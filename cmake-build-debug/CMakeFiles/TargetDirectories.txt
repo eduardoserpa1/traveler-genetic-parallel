@@ -1,3 +1,3 @@
-C:/ws/cc/paralelos/traveler-genetic-parallel/cmake-build-debug/CMakeFiles/traveler_genetic_parallel.dir
-C:/ws/cc/paralelos/traveler-genetic-parallel/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/ws/cc/paralelos/traveler-genetic-parallel/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/workspace/c/traveler-genetic-parallel/cmake-build-debug/CMakeFiles/traveler_genetic_parallel.dir
+C:/workspace/c/traveler-genetic-parallel/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/workspace/c/traveler-genetic-parallel/cmake-build-debug/CMakeFiles/rebuild_cache.dir

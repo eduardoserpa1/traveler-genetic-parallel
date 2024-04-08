@@ -13,27 +13,27 @@ using namespace std;
 vector<City> cityData;
 const string filename = "../database/estados-30.csv";
 
+//PARAMETROS
 double TARGET_DISTANCE = 200;
-int COMUNICATION_INTERVAL = 5;
-int FIRST_POPULATION_LENGTH = 1024;
+int COMUNICATION_INTERVAL = 50;
+int FIRST_POPULATION_LENGTH = 512;
 int POPULATION_DIVISOR = 16;
 int MUTATION_FACTOR = 1;
 int MUTATION_CHANCE = 50;
-int NUM_THREADS = 2;
-int ERA_LIMIT = 1000;
+int NUM_THREADS = 8;
+int ERA_LIMIT = 300;
 
-vector<Route> firstPopulation;
+//MEMORIA COMPARTILHADA
 vector<Route> elite;
 double eliteSumDistance = 0;
 
 //DECLARATIONS
-void setup();
 void loadCityData();
 Route createRandomRoute();
-void createFirstElite();
+void createFirstElite(vector<Route> *firstPopulation);
 void sortVectorByDistance(vector<Route> *v);
-void generateFirstPopulation();
-void train();
+void generateFirstPopulation(vector<Route> *firstPopulation);
+void train(vector<Route> firstPopulation);
 void generateChilds(vector<Route> elite, vector<Route> avaibleForElite, vector<Route> *childs);
 bool containsCity(vector<City> v, City c);
 void makeMutation(Route *r);
@@ -41,14 +41,6 @@ void updateEliteSumDistance();
 bool isBetterElite(vector<Route> currentElite);
 
 //IMPLEMENTATION
-void setup(){
-    loadCityData();
-    generateFirstPopulation();
-    sortVectorByDistance(&firstPopulation);
-    createFirstElite();
-    updateEliteSumDistance();
-}
-
 void loadCityData(){
     vector<string> linhas;
     ifstream arquivo(filename);
@@ -97,19 +89,13 @@ Route createRandomRoute(){
         finalVector.push_back(cityData[randomVector[i]]);
     }
 
-//    cout << "[";
-//    for(int i:randomVector){
-//        cout << i << ", ";
-//    }
-//    cout << "]";
-
     return Route(finalVector);
 }
 
-void createFirstElite(){
+void createFirstElite(vector<Route> firstPopulation){
     int divisor = FIRST_POPULATION_LENGTH / POPULATION_DIVISOR;
     for (int i = 0; i < divisor; ++i) {
-        elite.push_back(firstPopulation[i]);
+        elite.push_back(firstPopulation.at(i));
     }
 }
 
@@ -117,9 +103,9 @@ void sortVectorByDistance(vector<Route> *v){
     sort( v->begin(), v->end(), [](Route &a, Route &b){ return (a.getDistance() < b.getDistance());});
 }
 
-void generateFirstPopulation(){
+void generateFirstPopulation(vector<Route> *firstPopulation){
     for (int i = 0; i < FIRST_POPULATION_LENGTH; ++i) {
-        firstPopulation.push_back(createRandomRoute());
+        firstPopulation->push_back(createRandomRoute());
     }
 }
 
@@ -143,18 +129,20 @@ bool isBetterElite(vector<Route> currentElite){
     return sum < eliteSumDistance;
 }
 
-void train(){
+void train(vector<Route> firstPopulation){
+    //cout << "thread " << omp_get_thread_num() << " iniciou o treinamento, melhor caso inicial = " << firstPopulation[0].getDistance() << endl;
     bool running = true;
     int currentEra = 0;
     vector<Route> currentPopulation;
     vector<Route> currentElite;
+    int eliteSize = FIRST_POPULATION_LENGTH / POPULATION_DIVISOR;
     int divisor = FIRST_POPULATION_LENGTH - (FIRST_POPULATION_LENGTH / (POPULATION_DIVISOR / 4));
 
-    for (Route r:elite) {
-        currentElite.push_back(r);
+    for (int i = 0; i < eliteSize; ++i) {
+        currentElite.push_back(firstPopulation[i]);
     }
 
-    for (int i = 0; i < divisor; i++) {
+    for (int i = eliteSize; i < divisor + eliteSize; i++) {
         currentPopulation.push_back(firstPopulation[i]);
     }
 
@@ -163,41 +151,41 @@ void train(){
         vector<Route> childs;
         vector<Route> avaibleForElite;
 
-        if(currentEra % COMUNICATION_INTERVAL == 0 && currentEra != 0){
-            //cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << endl;
-//            for(City c : currentElite[0].getCities()){
-//                c.print();
-//            }
-            //cout << "thread " << omp_get_thread_num() << " ve melhor caso compartilhado: " << elite[0].getDistance() << endl << endl;
-            vector<Route> newElite;
-
-            for (int i = 0; i < currentElite.size(); ++i) {
-                if(currentElite[i].getDistance() > elite[i].getDistance())
-                    newElite.push_back(elite[i]);
-                else
-                    newElite.push_back(currentElite[i]);
-            }
-
-            sortVectorByDistance(&newElite);
-
+        if(currentEra % (COMUNICATION_INTERVAL + (omp_get_thread_num() * 2)) == 0 && currentEra != 0){
             updateEliteSumDistance();
 
             if(isBetterElite(currentElite)){
+                vector<Route> newElite;
+
+                for (int i = 0; i < currentElite.size(); ++i) {
+                    newElite.push_back(elite[i]);
+                    newElite.push_back(currentElite[i]);
+                }
+
+                sortVectorByDistance(&newElite);
                 elite.clear();
-                for (int i = 0; i < newElite.size(); ++i) {
+                for (int i = 0; i < newElite.size()/2; ++i) {
                     elite.push_back(newElite[i]);
                 }
             }else{
                 currentElite = elite;
             }
+
+            //cout << omp_get_thread_num() << " ve melhor caso compartilhado na era " << currentEra << ": " << elite[0].getDistance() << endl;
+            //            cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << endl;
+            //
+            //            cout << "Ordem do caminho: " << endl;
+            //            for(City c : elite[0].getCities()){
+            //                c.print();
+            //            }
+            //            cout << endl << "---------------------------------------------------------------------------------------------------" << endl;
         }
+
+
 
         for(int i = 0; i < FIRST_POPULATION_LENGTH / POPULATION_DIVISOR; i++){
-            avaibleForElite.push_back(createRandomRoute());
+            avaibleForElite.push_back(currentPopulation[i]);
         }
-
-        //cout << currentElite.size() << endl;
-        //cout << avaibleForElite.size() << endl;
 
         generateChilds(currentElite,avaibleForElite,&childs);
 
@@ -217,8 +205,6 @@ void train(){
             currentElite.push_back(currentPopulation[i]);
         }
 
-        //cout << currentPopulation.size() << endl;
-
         currentPopulation.clear();
 
         for (int i = 0; i < divisor; ++i) {
@@ -226,7 +212,7 @@ void train(){
         }
 
         //if(currentEra >= ERA_LIMIT)
-        if(elite[0].getDistance() <= TARGET_DISTANCE)
+        if(elite.at(0).getDistance() <= TARGET_DISTANCE)
             running = false;
 
         currentEra++;
@@ -340,25 +326,49 @@ bool containsCity(vector<City> v, City c){
 }
 
 int main() {
-    setup();
+    loadCityData();
 
-    omp_set_num_threads(NUM_THREADS);
 
-    int i;
+    for (int it = 0; it < 100; ++it) {
+        for (int numt = 1; numt <= NUM_THREADS; ++numt) {
+            elite.clear();
 
-    double starttime = omp_get_wtime();
+            omp_set_num_threads(numt);
+
+            int i;
+
+            double starttime = omp_get_wtime();
+
+            vector<vector<Route>> populations;
+
+            for (int x = 0; x < numt; ++x) {
+                vector<Route> initialPopulation;
+
+                generateFirstPopulation(&initialPopulation);
+                sortVectorByDistance(&initialPopulation);
+
+                populations.push_back(initialPopulation);
+            }
+
+            createFirstElite(populations.at(0));
+
+            updateEliteSumDistance();
 
 #pragma omp parallel private ( i ) shared ( elite, eliteSumDistance )
 #pragma omp for schedule (dynamic)
-    for (i = 0; i < NUM_THREADS; ++i){
+            for (i = 0; i < numt; ++i) {
+                train(populations.at(i));
+            }
 
-        train();
+            double finaltime = omp_get_wtime();
+
+            //cout << "tempo demorado para atingir a rota minima de " << TARGET_DISTANCE << " com " << numt
+            //     << " threads: " << finaltime - starttime << "ms" << endl;
+
+            cout << finaltime - starttime << ",";
+        }
+        cout << endl;
     }
-
-    double finaltime = omp_get_wtime();
-
-    cout << "tempo demorado para atingir a rota minima de " << TARGET_DISTANCE << ": " << finaltime - starttime << "ms" << endl;
-
 
     return 0;
 };
