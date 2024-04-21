@@ -17,13 +17,13 @@ vector<City> cityData;
 const string filename = "../database/estados-30.csv";
 
 //ALGORITMO
-int POPULATION_LENGTH = 100;
-int ELITE_LENGTH = 20;
+int POPULATION_LENGTH = 1000;
+int ELITE_LENGTH = 50;
 int MUTATION_FACTOR = 2;
 int MUTATION_CHANCE = 80;
 //PARALLELIZACAO
-int NUM_THREADS = 8;
-int COMUNICATION_INTERVAL = 20;
+int NUM_THREADS = 16;
+int COMUNICATION_INTERVAL = 30;
 double TARGET_DISTANCE = 215;
 
 //MEMORIA COMPARTILHADA
@@ -302,7 +302,7 @@ int main() {
     srand((int)time(0));
     loadCityData();
 
-    for (int it = 0; it < 200; ++it) {
+    for (int it = 0; it < 5; ++it) {
         for (int numt = 1; numt <= NUM_THREADS; ++numt) {
             elite.clear();
 
