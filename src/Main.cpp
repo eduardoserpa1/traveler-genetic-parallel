@@ -18,13 +18,13 @@ const string filename = "../database/estados-30.csv";
 
 //ALGORITMO
 int POPULATION_LENGTH = 100;
-int ELITE_LENGTH = 25;
-int MUTATION_FACTOR = 1;
+int ELITE_LENGTH = 20;
+int MUTATION_FACTOR = 2;
 int MUTATION_CHANCE = 80;
 //PARALLELIZACAO
-int NUM_THREADS = 1;
-int COMUNICATION_INTERVAL = 50;
-double TARGET_DISTANCE = 200;
+int NUM_THREADS = 8;
+int COMUNICATION_INTERVAL = 20;
+double TARGET_DISTANCE = 215;
 
 //MEMORIA COMPARTILHADA
 vector<Route> elite;
@@ -125,6 +125,7 @@ bool isBetterElite(vector<Route> *currentElite){
     return sum < eliteSumDistance;
 }
 
+
 void train(vector<Route> *firstPopulation){
     //cout << "thread " << omp_get_thread_num() << " iniciou o treinamento, melhor caso inicial = " << firstPopulation[0].getDistance() << endl;
     bool running = true;
@@ -153,13 +154,17 @@ void train(vector<Route> *firstPopulation){
                 vector<Route> newElite;
 
                 for (int i = 0; i < currentElite.size(); ++i) {
-                    newElite.push_back(elite[i]);
-                    newElite.push_back(currentElite[i]);
+                    if(elite[i].getDistance() <= currentElite[i].getDistance())
+                        newElite.push_back(elite[i]);
+                    else
+                        newElite.push_back(currentElite[i]);
                 }
 
                 sortVectorByDistance(&newElite);
                 elite.clear();
-                for (int i = 0; i < newElite.size()/2; ++i) {
+                makeMutation(&newElite[2]);
+                makeMutation(&newElite[4]);
+                for (int i = 0; i < newElite.size(); ++i) {
                     elite.push_back(newElite[i]);
                 }
             }else{
@@ -167,16 +172,18 @@ void train(vector<Route> *firstPopulation){
             }
 
             //cout << omp_get_thread_num() << " ve melhor caso compartilhado na era " << currentEra << ": " << elite[0].getDistance() << endl;
-                        cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << endl;
-            //
-            //            cout << "Ordem do caminho: " << endl;
-            //            for(City c : elite[0].getCities()){
-            //                c.print();
-            //            }
-            //            cout << endl << "---------------------------------------------------------------------------------------------------" << endl;
+//            cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << "  |  elite global: " << elite[0].getDistance() << endl;
+//            //
+//            //            cout << "Ordem do caminho: " << endl;
+//            for(int i = 0; i<5;i++){
+//                cout << endl;
+//                for(City c : elite[i].getCities()){
+//                    c.print();
+//                }
+//            }
+//
+//                        cout << endl << "---------------------------------------------------------------------------------------------------" << endl;
         }
-
-
 
         for(int i = 0; i < ELITE_LENGTH; i++){
             avaibleForElite.push_back(currentPopulation[i]);
@@ -236,6 +243,11 @@ void generateChilds(vector<Route> *elite, vector<Route> *avaibleForElite, vector
 
         int half = motherDNA.size() / 2;
 
+//        for(int j = 0; j < half; ++j){
+//            child3.push_back(City("null",0,0));
+//            child4.push_back(City("null",0,0));
+//        }
+
         for (int j = 0; j < half; ++j) {
             child1.push_back(motherDNA[j]);
             child2.push_back(fatherDNA[j]);
@@ -245,8 +257,9 @@ void generateChilds(vector<Route> *elite, vector<Route> *avaibleForElite, vector
 
         makeChild(&child1,&motherDNA,&fatherDNA,half,0);
         makeChild(&child2,&fatherDNA,&motherDNA,half,0);
-        makeChild(&child3,&motherDNA,&fatherDNA,0,half);
-        makeChild(&child4,&fatherDNA,&motherDNA,0,half);
+
+        makeChild(&child3,&fatherDNA,&motherDNA,0,half);
+        makeChild(&child4,&motherDNA,&fatherDNA,0,half);
 
 
         Route route1 = Route(child1);
@@ -289,7 +302,7 @@ int main() {
     srand((int)time(0));
     loadCityData();
 
-    for (int it = 0; it < 1; ++it) {
+    for (int it = 0; it < 200; ++it) {
         for (int numt = 1; numt <= NUM_THREADS; ++numt) {
             elite.clear();
 

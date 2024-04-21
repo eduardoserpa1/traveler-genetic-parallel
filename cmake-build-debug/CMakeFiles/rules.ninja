@@ -42,7 +42,7 @@ rule CUSTOM_COMMAND
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = "C:\Program Files\JetBrains\CLion 2023.3.4\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -SC:\ws\cc\paralelos\traveler-genetic-parallel -BC:\ws\cc\paralelos\traveler-genetic-parallel\cmake-build-debug
+  command = "C:\Program Files\JetBrains\CLion 2023.3.4\bin\cmake\win\x64\bin\cmake.exe" --regenerate-during-build -SC:\workspace\c\traveler-genetic-parallel -BC:\workspace\c\traveler-genetic-parallel\cmake-build-debug
   description = Re-running CMake...
   generator = 1
 
