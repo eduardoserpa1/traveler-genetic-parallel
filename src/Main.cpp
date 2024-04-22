@@ -22,7 +22,7 @@ int ELITE_LENGTH = 50;
 int MUTATION_FACTOR = 2;
 int MUTATION_CHANCE = 80;
 //PARALLELIZACAO
-int NUM_THREADS = 16;
+int NUM_THREADS = 4;
 int COMUNICATION_INTERVAL = 30;
 double TARGET_DISTANCE = 215;
 
@@ -171,18 +171,9 @@ void train(vector<Route> *firstPopulation){
                 currentElite = elite;
             }
 
-            //cout << omp_get_thread_num() << " ve melhor caso compartilhado na era " << currentEra << ": " << elite[0].getDistance() << endl;
-//            cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << "  |  elite global: " << elite[0].getDistance() << endl;
-//            //
-//            //            cout << "Ordem do caminho: " << endl;
-//            for(int i = 0; i<5;i++){
-//                cout << endl;
-//                for(City c : elite[i].getCities()){
-//                    c.print();
-//                }
-//            }
-//
-//                        cout << endl << "---------------------------------------------------------------------------------------------------" << endl;
+
+            cout << "Melhor rota da era " << currentEra << " na thread " << omp_get_thread_num() << ": distancia = " << currentElite[0].getDistance() << "  |  elite global: " << elite[0].getDistance() << endl;
+
         }
 
         for(int i = 0; i < ELITE_LENGTH; i++){
@@ -243,11 +234,6 @@ void generateChilds(vector<Route> *elite, vector<Route> *avaibleForElite, vector
 
         int half = motherDNA.size() / 2;
 
-//        for(int j = 0; j < half; ++j){
-//            child3.push_back(City("null",0,0));
-//            child4.push_back(City("null",0,0));
-//        }
-
         for (int j = 0; j < half; ++j) {
             child1.push_back(motherDNA[j]);
             child2.push_back(fatherDNA[j]);
@@ -302,8 +288,8 @@ int main() {
     srand((int)time(0));
     loadCityData();
 
-    for (int it = 0; it < 5; ++it) {
-        for (int numt = 1; numt <= NUM_THREADS; ++numt) {
+    for (int it = 0; it < 1; ++it) {
+        for (int numt = NUM_THREADS; numt <= NUM_THREADS; ++numt) {
             elite.clear();
 
             omp_set_num_threads(numt);
@@ -337,10 +323,7 @@ int main() {
 
             double finaltime = omp_get_wtime();
 
-            //cout << "tempo demorado para atingir a rota minima de " << TARGET_DISTANCE << " com " << numt
-            //     << " threads: " << finaltime - starttime << "ms" << endl;
-
-            cout << finaltime - starttime << ",";
+            cout << endl << finaltime - starttime << "ms" << endl;
         }
         cout << endl;
     }
